@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PYTHON_BIN="${PYTHON:-python3}"
+SOLVER_BIN="${SVMP_BIN:-svmultiphysics}"
+MPI_BIN="${MPIEXEC:-mpirun}"
+PROCESS_COUNT="${NP:-8}"
+MODE="all"
+DRY_RUN=0
+
+usage() {
+  printf '%s\n' \
+    "Usage: ./allRun [--generate-only | --postprocess-only | --dry-run]" \
+    "" \
+    "Environment overrides:" \
+    "  PYTHON    Python interpreter with numpy, matplotlib, and vtk" \
+    "  SVMP_BIN   svMultiPhysics executable (default: svmultiphysics)" \
+    "  MPIEXEC    MPI launcher (default: mpirun)" \
+    "  NP         MPI process count (default: 8)"
+}
+
+while (($#)); do
+  case "$1" in
+    --generate-only) MODE="generate" ;;
+    --postprocess-only) MODE="postprocess" ;;
+    --dry-run) DRY_RUN=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *) printf 'Unknown option: %s\n' "$1" >&2; usage >&2; exit 2 ;;
+  esac
+  shift
+done
+
+if [[ "$MODE" != "postprocess" ]]; then
+  "$PYTHON_BIN" "$ROOT_DIR/scripts/generate_cases.py"
+fi
+
+if [[ "$MODE" == "generate" ]]; then
+  exit 0
+fi
+
+if [[ "$MODE" != "postprocess" ]]; then
+  run_args=(
+    "$PYTHON_BIN" "$ROOT_DIR/scripts/run_cases.py"
+    --solver "$SOLVER_BIN"
+    --mpi-exec "$MPI_BIN"
+    --np "$PROCESS_COUNT"
+  )
+  if [[ "$DRY_RUN" == "1" ]]; then
+    run_args+=(--dry-run)
+  fi
+  "${run_args[@]}"
+  if [[ "$DRY_RUN" == "1" ]]; then
+    printf '%s\n' "Dry run complete; validation was skipped because no new results were produced."
+    exit 0
+  fi
+fi
+
+"$PYTHON_BIN" "$ROOT_DIR/scripts/validate_results.py"
+"$PYTHON_BIN" "$ROOT_DIR/scripts/plot_streamlines.py"
+
+printf '%s\n' "Benchmark complete. See $ROOT_DIR/validation/summary.json and validation/figures/."

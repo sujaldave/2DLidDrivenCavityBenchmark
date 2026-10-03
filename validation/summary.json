@@ -1,0 +1,12 @@
+{
+  "benchmark": "2D lid-driven cavity",
+  "reference": "Ghia, Ghia, and Shin (1982)",
+  "status": "PASS",
+  "reynolds_numbers": [
+    100,
+    400,
+    1000,
+    5000
+  ],
+  "metrics_file": "metrics.csv"
+}

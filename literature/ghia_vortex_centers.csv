@@ -1,0 +1,5 @@
+reynolds,vortex,x,y,extremum
+100,Primary,0.6171875,0.734375,min
+400,Primary,0.5546875,0.60546875,min
+1000,Primary,0.53125,0.5625,min
+5000,Primary,0.51171875,0.53515625,min

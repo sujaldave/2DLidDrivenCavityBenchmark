@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Generated case inputs and solver outputs. Recreate with ./allRun.
+cases/
+
+# Temporary stop file recognized by svMultiPhysics.
+STOP_SIM
